@@ -1,0 +1,464 @@
+/* Chess Stream Overlay - OBS Stylesheet (Optimized & Non-Clipping) */
+
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap');
+
+:root {
+  --bg-panel: rgba(18, 22, 28, 0.94);
+  --bg-card: rgba(28, 34, 44, 0.8);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --color-win: #81b64c;
+  --color-win-bg: rgba(129, 182, 76, 0.2);
+  --color-win-border: rgba(129, 182, 76, 0.5);
+  
+  --color-loss: #fa4138;
+  --color-loss-bg: rgba(250, 65, 56, 0.2);
+  --color-loss-border: rgba(250, 65, 56, 0.5);
+  
+  --color-draw: #94a3b8;
+  --color-draw-bg: rgba(148, 163, 184, 0.18);
+  --color-draw-border: rgba(148, 163, 184, 0.45);
+  
+  --color-accent: #38bdf8;
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-numbers: 'JetBrains Mono', monospace;
+  --font-display: 'Chakra Petch', sans-serif;
+  --scale: 1;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: transparent !important;
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  overflow: visible !important;
+  width: auto;
+  height: auto;
+  display: inline-block;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+#overlay-container {
+  transform-origin: top left;
+  transform: scale(var(--scale));
+  padding: 4px;
+  display: inline-flex;
+  flex-direction: column;
+  position: relative;
+  max-width: fit-content;
+}
+
+/* ==========================================================================
+   THEMES
+   ========================================================================== */
+
+/* 1. Chess.com Classic */
+body.theme-chesscom {
+  --bg-panel: rgba(22, 21, 18, 0.95);
+  --bg-card: rgba(38, 36, 33, 0.9);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --color-win: #81b64c;
+  --color-win-bg: rgba(129, 182, 76, 0.22);
+  --color-win-border: rgba(129, 182, 76, 0.55);
+  --color-loss: #e05353;
+  --color-loss-bg: rgba(224, 83, 83, 0.22);
+  --color-loss-border: rgba(224, 83, 83, 0.55);
+  --color-draw: #9ca3af;
+  --color-draw-bg: rgba(156, 163, 175, 0.22);
+}
+
+/* 2. Cyberpunk Neon */
+body.theme-neon {
+  --bg-panel: rgba(10, 10, 20, 0.95);
+  --bg-card: rgba(18, 16, 38, 0.85);
+  --border-color: rgba(0, 240, 255, 0.35);
+  --text-primary: #f0fdf4;
+  --color-win: #00ff88;
+  --color-win-bg: rgba(0, 255, 136, 0.2);
+  --color-win-border: #00ff88;
+  --color-loss: #ff0055;
+  --color-loss-bg: rgba(255, 0, 85, 0.2);
+  --color-loss-border: #ff0055;
+  --color-draw: #00e5ff;
+  --color-draw-bg: rgba(0, 229, 255, 0.2);
+  --color-draw-border: #00e5ff;
+}
+body.theme-neon .overlay-wrapper {
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.28);
+}
+
+/* 3. Twitch Purple */
+body.theme-purple {
+  --bg-panel: rgba(17, 14, 28, 0.95);
+  --bg-card: rgba(31, 25, 49, 0.85);
+  --border-color: rgba(169, 112, 255, 0.3);
+  --color-win: #46e08c;
+  --color-win-bg: rgba(70, 224, 140, 0.22);
+  --color-win-border: rgba(70, 224, 140, 0.55);
+  --color-loss: #ff4766;
+  --color-loss-bg: rgba(255, 71, 102, 0.22);
+  --color-loss-border: rgba(255, 71, 102, 0.55);
+  --color-draw: #bf94ff;
+  --color-draw-bg: rgba(191, 148, 255, 0.22);
+  --color-draw-border: rgba(191, 148, 255, 0.55);
+}
+
+/* 4. Minimal Glass */
+body.theme-minimal {
+  --bg-panel: rgba(0, 0, 0, 0.65);
+  --bg-card: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.14);
+  --color-win: #4ade80;
+  --color-loss: #f87171;
+  --color-draw: #cbd5e1;
+}
+body.theme-minimal .overlay-wrapper {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* 5. Sleek Dark */
+body.theme-dark {
+  --bg-panel: rgba(12, 14, 18, 0.96);
+  --bg-card: rgba(24, 28, 35, 0.92);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --color-win: #22c55e;
+  --color-loss: #ef4444;
+  --color-draw: #94a3b8;
+}
+
+/* ==========================================================================
+   LAYOUT: HORIZONTAL (Default - Sleek, Compact, Non-Clipping)
+   ========================================================================== */
+.overlay-wrapper {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 6px 12px;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  max-width: fit-content;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--border-color);
+  line-height: 1;
+}
+
+.title-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.chess-icon {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.user-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 3px 10px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.stat-box.win {
+  background: var(--color-win-bg);
+  border-color: var(--color-win-border);
+}
+.stat-box.loss {
+  background: var(--color-loss-bg);
+  border-color: var(--color-loss-border);
+}
+.stat-box.draw {
+  background: var(--color-draw-bg);
+  border-color: var(--color-draw-border);
+}
+
+.stat-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.stat-box.win .stat-label { color: var(--color-win); }
+.stat-box.loss .stat-label { color: var(--color-loss); }
+.stat-box.draw .stat-label { color: var(--color-draw); }
+
+.stat-value {
+  font-family: var(--font-numbers);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  color: #ffffff;
+  display: inline-block;
+  min-width: 14px;
+  text-align: center;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 2px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-family: var(--font-numbers);
+  font-size: 11px;
+}
+
+.rating-diff {
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 10px;
+}
+.rating-diff.positive {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--color-win);
+}
+.rating-diff.negative {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-loss);
+}
+.rating-diff.neutral {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--color-draw);
+}
+
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 700;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.winrate-badge {
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   LAYOUT: COMPACT PILL (Single-Line Capsule)
+   ========================================================================== */
+body.layout-pill .overlay-wrapper {
+  flex-direction: row;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  gap: 8px;
+}
+
+body.layout-pill .header-row,
+body.layout-pill .meta-row,
+body.layout-pill .last-game-preview {
+  display: none !important;
+}
+
+body.layout-pill .stats-row {
+  gap: 5px;
+}
+
+body.layout-pill .stat-box {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  gap: 4px;
+}
+
+body.layout-pill .stat-value {
+  font-size: 16px;
+}
+
+/* ==========================================================================
+   LAYOUT: VERTICAL
+   ========================================================================== */
+body.layout-vertical .overlay-wrapper {
+  width: 140px;
+  padding: 8px 10px;
+  gap: 6px;
+}
+
+body.layout-vertical .stats-row {
+  flex-direction: column;
+  width: 100%;
+  gap: 4px;
+}
+
+body.layout-vertical .stat-box {
+  width: 100%;
+  justify-content: space-between;
+  padding: 4px 8px;
+}
+
+body.layout-vertical .stat-value {
+  font-size: 18px;
+}
+
+body.layout-vertical .meta-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   LAYOUT: CARD (DETAILED)
+   ========================================================================== */
+body.layout-card .overlay-wrapper {
+  width: 240px;
+  padding: 12px;
+  gap: 8px;
+}
+
+body.layout-card .stat-box {
+  flex: 1;
+  flex-direction: column;
+  padding: 6px 8px;
+  align-items: center;
+}
+
+body.layout-card .stat-value {
+  font-size: 22px;
+}
+
+.last-game-preview {
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   ANIMATIONS & FLOATING NOTIFICATIONS
+   ========================================================================== */
+.animate-bump {
+  animation: scoreBump 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes scoreBump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); text-shadow: 0 0 12px currentColor; }
+  100% { transform: scale(1); }
+}
+
+.animate-glow-win {
+  animation: glowWin 1s ease-out;
+}
+@keyframes glowWin {
+  0% { box-shadow: 0 0 25px var(--color-win); border-color: var(--color-win); }
+  100% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); }
+}
+
+.animate-glow-loss {
+  animation: glowLoss 1s ease-out;
+}
+@keyframes glowLoss {
+  0% { box-shadow: 0 0 25px var(--color-loss); border-color: var(--color-loss); }
+  100% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); }
+}
+
+.event-toast {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 99;
+}
+
+.event-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(8px);
+}
+.event-toast.win {
+  background: var(--color-win);
+  color: #0b2505;
+}
+.event-toast.loss {
+  background: var(--color-loss);
+  color: #ffffff;
+}
+.event-toast.draw {
+  background: var(--color-draw);
+  color: #1e293b;
+}

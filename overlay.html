@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Stream Overlay</title>
+  <link rel="stylesheet" href="overlay.css">
+</head>
+<body class="theme-chesscom layout-horizontal">
+  <div id="overlay-container">
+    <div id="event-toast" class="event-toast"></div>
+
+    <div class="overlay-wrapper" id="overlay-card">
+      <div class="header-row" id="header-row">
+        <div class="title-badge">
+          <svg class="chess-icon" viewBox="0 0 24 24">
+            <path d="M19 22H5v-2h14v2M17.5 13.5c-.3 0-.6.1-.8.2C15.9 12.5 14.6 11 13 10.3V8.8c.8-.4 1.5-1.2 1.5-2.3 0-1.4-1.1-2.5-2.5-2.5S9.5 5.1 9.5 6.5c0 1.1.7 1.9 1.5 2.3v1.5C9.4 11 8.1 12.5 7.3 13.7c-.2-.1-.5-.2-.8-.2-1.4 0-2.5 1.1-2.5 2.5 0 1.1.7 2 1.7 2.4.2 1.2 1.2 2.1 2.3 2.1h8c1.1 0 2.1-.9 2.3-2.1 1-.4 1.7-1.3 1.7-2.4 0-1.4-1.1-2.5-2.5-2.5z"/>
+          </svg>
+          <span id="custom-title">SESSION RECORD</span>
+        </div>
+        <span class="user-tag" id="user-tag" style="display: none;"></span>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box win" id="box-wins">
+          <span class="stat-label">W</span>
+          <span class="stat-value" id="val-wins">0</span>
+        </div>
+
+        <div class="stat-box loss" id="box-losses">
+          <span class="stat-label">L</span>
+          <span class="stat-value" id="val-losses">0</span>
+        </div>
+
+        <div class="stat-box draw" id="box-draws">
+          <span class="stat-label">D</span>
+          <span class="stat-value" id="val-draws">0</span>
+        </div>
+      </div>
+
+      <div class="meta-row" id="meta-row">
+        <div class="rating-badge" id="rating-badge">
+          <span id="val-rating">----</span>
+          <span class="rating-diff neutral" id="val-rating-diff">±0</span>
+        </div>
+
+        <div class="streak-badge" id="streak-badge" style="display: none;">
+          <span id="streak-icon">🔥</span>
+          <span id="val-streak">0W</span>
+        </div>
+
+        <div class="winrate-badge" id="winrate-badge">
+          <span id="val-winrate">0%</span> WR
+        </div>
+      </div>
+
+      <div class="last-game-preview" id="last-game-preview" style="display: none;">
+        <span id="last-game-text">No games yet</span>
+        <span id="last-game-time"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="common.js"></script>
+  <script src="overlay.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+# Netlify Configuration for Chess Stream Overlay
+
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
+
+[[headers]]
+  for = "/overlay.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0"
+
+[[headers]]
+  for = "/control.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0"
+
+[[redirects]]
+  from = "/"
+  to = "/control.html"
+  status = 200
+
+[[redirects]]
+  from = "/overlay"
+  to = "/overlay.html"
+  status = 200
+
+[[redirects]]
+  from = "/control"
+  to = "/control.html"
+  status = 200
