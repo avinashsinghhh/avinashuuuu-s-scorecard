@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Like Counter Dashboard</title>
+  <link rel="stylesheet" href="likes-control.css">
+</head>
+<body>
+  <div class="dashboard-container">
+
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon-box">
+          <span class="brand-emoji">👍</span>
+        </div>
+        <div>
+          <h1 class="brand-title">Live Like Counter Overlay</h1>
+          <div class="brand-subtitle">Real-Time Auto-Tracking for YouTube Live &amp; OBS Studio</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a href="control.html" class="nav-switch-btn" title="Open Chess Score Tracker">
+          ♟️ Chess Overlay
+        </a>
+        <div class="status-indicator" id="status-badge">
+          <span class="status-dot"></span>
+          <span id="status-text">Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- OBS Browser URL Quick Banner -->
+    <section class="obs-banner">
+      <div class="obs-info">
+        <span class="obs-tag">OBS BROWSER URL</span>
+        <input type="text" class="obs-url-box" id="obs-url-input" readonly value="http://localhost:5050/likes-overlay.html">
+      </div>
+      <div class="obs-actions">
+        <button class="btn-copy" id="btn-copy-obs">
+          📋 Copy OBS URL
+        </button>
+        <a href="likes-overlay.html" target="_blank" class="btn-open-preview">
+          🔗 Open Overlay
+        </a>
+      </div>
+    </section>
+
+    <!-- Main Grid -->
+    <div class="grid-main">
+
+      <!-- LEFT COLUMN: Live Auto-Tracking & Manual Score -->
+      <div class="col-left">
+
+        <!-- Panel 1: Live Stream Auto-Tracking -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🔴</span>
+              <span>Live Stream Auto-Tracking</span>
+            </div>
+            <label class="toggle-switch-compact" title="Turn auto-fetch on or off">
+              <input type="checkbox" id="toggle-autoupdate">
+              <span class="toggle-slider-compact"></span>
+              <span class="toggle-label-compact" id="label-autoupdate">Auto-Fetch: OFF</span>
+            </label>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="input-yt-url">
+              YouTube Stream URL, Video ID, or Channel Handle
+              <span class="label-hint">(e.g. https://youtube.com/watch?v=... or @MyChannel/live)</span>
+            </label>
+            <div class="input-action-row">
+              <input type="text" class="text-input" id="input-yt-url" placeholder="https://www.youtube.com/watch?v=VIDEO_ID or @Handle/live">
+              <button class="btn-primary" id="btn-save-stream">Connect</button>
+              <button class="btn-secondary" id="btn-poll-now" title="Check live like count right now">⚡ Fetch Now</button>
+            </div>
+          </div>
+
+          <div class="stream-info-card" id="stream-info-card" style="display: none;">
+            <div class="stream-info-row">
+              <span class="stream-badge-live" id="stream-badge-status">LIVE</span>
+              <span class="stream-title-text" id="stream-title-text">Stream Title</span>
+            </div>
+            <div class="stream-info-meta" id="stream-info-meta">
+              Last updated: Just now
+            </div>
+          </div>
+
+          <details class="api-accordion">
+            <summary class="api-summary">⚙️ Advanced: Official YouTube Data API Key (Optional)</summary>
+            <div class="api-body">
+              <p class="api-tip">
+                Optional: The overlay automatically scrapes public live streams. Entering a free YouTube Data API v3 key guarantees 100% official uptime and works anywhere (including Netlify and local file mode).
+              </p>
+              <div class="input-action-row" style="margin-top: 8px;">
+                <input type="password" class="text-input" id="input-api-key" placeholder="AIzaSy... (YouTube Data API v3 key)">
+                <button class="btn-secondary" id="btn-save-key">Save Key</button>
+              </div>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 5px;">
+                Get a free key in 2 minutes at <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color: var(--accent);">Google Cloud Console</a>.
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <!-- Panel 2: Current Likes & Manual Adjustments -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🎯</span>
+              <span>Likes Counter &amp; Quick Adjustments</span>
+            </div>
+            <button class="btn-reset-danger" id="btn-reset-likes" title="Reset score to 0">
+              🔄 Reset to 0
+            </button>
+          </div>
+
+          <div class="counter-control-card">
+            <div class="counter-display-box">
+              <span class="counter-giant-number" id="display-likes-number">0</span>
+              <span class="counter-giant-label">CURRENT LIKES</span>
+            </div>
+
+            <div class="steppers-grid">
+              <button class="btn-step add" id="btn-add-1">+1 Like</button>
+              <button class="btn-step add" id="btn-add-5">+5</button>
+              <button class="btn-step add" id="btn-add-10">+10</button>
+              <button class="btn-step sub" id="btn-sub-1">-1</button>
+              <button class="btn-step sub" id="btn-sub-5">-5</button>
+            </div>
+
+            <div class="direct-set-row">
+              <input type="number" min="0" class="number-input-set" id="input-direct-likes" placeholder="Set exact count">
+              <button class="btn-secondary" id="btn-set-direct">Set Exact</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel 3: Goal & Milestones -->
+        <section class="panel">
+          <div class="panel-title">
+            <span>🏆</span>
+            <span>Goal &amp; Milestone Rewards</span>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="field-group">
+              <label class="field-label" for="input-goal-target">Like Goal Target</label>
+              <input type="number" min="1" class="text-input" id="input-goal-target" value="50">
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="input-goal-step">Auto-Bump Step (+)</label>
+              <input type="number" min="5" class="text-input" id="input-goal-step" value="50">
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="input-reward-text">Goal Title / Stream Reward Text</label>
+            <input type="text" class="text-input" id="input-reward-text" value="LIKE GOAL" placeholder="e.g. 100 LIKES = FACE REVEAL">
+          </div>
+
+          <div class="toggle-row">
+            <label class="toggle-item">
+              <input type="checkbox" id="toggle-autobump" checked>
+              <span>Auto-bump goal when achieved (e.g. 50 → 100 → 150)</span>
+            </label>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Live Preview & Customization -->
+      <div class="col-right">
+
+        <!-- Panel 4: Interactive Live Preview & Tests -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>👁️</span>
+              <span>Live Overlay Preview</span>
+            </div>
+            <div class="preview-mode-tag">Real-Time</div>
+          </div>
+
+          <!-- Preview Frame Wrapper -->
+          <div class="preview-container" id="preview-container">
+            <iframe id="preview-iframe" src="likes-overlay.html" frameborder="0"></iframe>
+          </div>
+
+          <!-- Streamer Test Actions -->
+          <div class="test-actions-box">
+            <div class="test-label">🧪 Streamer Test Controls:</div>
+            <div class="test-buttons-row">
+              <button class="btn-test" id="btn-test-like" title="Simulate a new like to test bounce & floating particles">
+                ✨ Test Like (+1)
+              </button>
+              <button class="btn-test gold" id="btn-test-goal" title="Test celebratory confetti & victory fanfare">
+                🎉 Test Goal Reached
+              </button>
+              <button class="btn-test purple" id="btn-toggle-demo" title="Auto-increments every 6s to preview active stream vibe">
+                ⚡ Demo Mode: OFF
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel 5: Appearance & Customization -->
+        <section class="panel">
+          <div class="panel-title">
+            <span>🎨</span>
+            <span>Style &amp; Customization</span>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="field-group">
+              <label class="field-label" for="select-layout">Overlay Layout</label>
+              <select class="select-input" id="select-layout">
+                <option value="bar">Horizontal Stream Bar (Standard)</option>
+                <option value="pill">Compact Pill (Minimal)</option>
+                <option value="badge">Badge / Counter Only</option>
+                <option value="tower">Vertical Tower (Shorts / TikTok)</option>
+                <option value="card">Floating Stream Card</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="select-theme">Color Theme</label>
+              <select class="select-input" id="select-theme">
+                <option value="youtube">YouTube Live Red</option>
+                <option value="neon">Cyberpunk Neon</option>
+                <option value="emerald">Emerald Gaming</option>
+                <option value="purple">Twitch Purple</option>
+                <option value="sunset">Sunset Flame</option>
+                <option value="minimal">Minimal Crystal Glass</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="field-group">
+              <label class="field-label" for="select-icon">Icon Symbol</label>
+              <select class="select-input" id="select-icon">
+                <option value="thumb">👍 Thumbs Up</option>
+                <option value="heart">❤️ Heart</option>
+                <option value="fire">🔥 Fire</option>
+                <option value="star">⭐ Star</option>
+                <option value="diamond">💎 Diamond</option>
+                <option value="gamepad">🎮 Gamepad</option>
+                <option value="rocket">🚀 Rocket</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="select-poll">Auto-Poll Rate</label>
+              <select class="select-input" id="select-poll">
+                <option value="3">Every 3 seconds (High Hype)</option>
+                <option value="5" selected>Every 5 seconds (Recommended)</option>
+                <option value="10">Every 10 seconds</option>
+                <option value="30">Every 30 seconds</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Visibility Toggles -->
+          <div class="toggles-grid">
+            <label class="toggle-item">
+              <input type="checkbox" id="toggle-percentage" checked>
+              <span>Show Percentage (%)</span>
+            </label>
+            <label class="toggle-item">
+              <input type="checkbox" id="toggle-goal" checked>
+              <span>Show Goal (/ 50)</span>
+            </label>
+            <label class="toggle-item">
+              <input type="checkbox" id="toggle-remaining" checked>
+              <span>Show Remaining Count</span>
+            </label>
+            <label class="toggle-item">
+              <input type="checkbox" id="toggle-sound" checked>
+              <span>Sound Effects (Chime &amp; Fanfare)</span>
+            </label>
+          </div>
+
+          <!-- Sliders: Scale & Sound Volume -->
+          <div class="sliders-row">
+            <div class="slider-box">
+              <div class="slider-header">
+                <span>Overlay Scale</span>
+                <span class="slider-val" id="val-scale">100%</span>
+              </div>
+              <input type="range" min="60" max="180" step="5" class="range-slider" id="slider-scale" value="100">
+            </div>
+
+            <div class="slider-box">
+              <div class="slider-header">
+                <span>Sound Volume</span>
+                <span class="slider-val" id="val-volume">50%</span>
+              </div>
+              <input type="range" min="5" max="100" step="5" class="range-slider" id="slider-volume" value="50">
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+    </div>
+
+    <!-- Instructions / Footer -->
+    <footer class="app-footer">
+      <div class="footer-note">
+        💡 <strong>How to add to OBS Studio / Streamlabs:</strong>
+        1. Click <strong>Copy OBS URL</strong> above.
+        2. In OBS, click <strong>+</strong> under Sources → <strong>Browser</strong>.
+        3. Paste the URL, set Width: <code>500</code> and Height: <code>130</code> (or <code>180</code> for Card, <code>360</code> for Vertical Tower).
+        4. Check <em>"Shutdown source when not visible"</em>. The overlay is transparent and updates automatically!
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="likes-control.js"></script>
+</body>
+</html>

@@ -2,11 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=control.html">
-  <title>Chess Stream Overlay</title>
-  <script>window.location.href = "control.html";</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Overlay Suite</title>
+  <link rel="stylesheet" href="likes-control.css">
+  <style>
+    .hub-container {
+      max-width: 820px;
+      margin: 60px auto;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      text-align: center;
+    }
+    .hub-title {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+    }
+    .hub-subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    .hub-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 10px;
+    }
+    @media (max-width: 680px) {
+      .hub-grid { grid-template-columns: 1fr; }
+    }
+    .hub-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .hub-card:hover {
+      transform: translateY(-4px);
+      border-color: #3b82f6;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+    .hub-card.likes:hover {
+      border-color: var(--yt-red);
+      box-shadow: 0 12px 30px rgba(255, 0, 51, 0.25);
+    }
+    .hub-card.chess:hover {
+      border-color: #81b64c;
+      box-shadow: 0 12px 30px rgba(129, 182, 76, 0.25);
+    }
+    .hub-icon {
+      font-size: 48px;
+    }
+    .hub-card-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .hub-card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .hub-card-btn {
+      margin-top: auto;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 700;
+      width: 100%;
+    }
+    .btn-red {
+      background: var(--yt-red);
+      color: #fff;
+    }
+    .btn-green {
+      background: #81b64c;
+      color: #fff;
+    }
+  </style>
 </head>
-<body style="background: #0f1319; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh;">
-  <p>Loading Chess Stream Overlay... <a href="control.html" style="color: #38bdf8;">Click here if not redirected</a>.</p>
+<body>
+  <div class="hub-container">
+    <div>
+      <h1 class="hub-title">🎬 Stream Overlay Suite</h1>
+      <p class="hub-subtitle">Professional, real-time animated stream overlays for OBS Studio &amp; Streamlabs</p>
+    </div>
+
+    <div class="hub-grid">
+      <!-- Like Counter Overlay -->
+      <a href="likes-control.html" class="hub-card likes">
+        <span class="hub-icon">👍</span>
+        <h2 class="hub-card-title">Live Like Counter</h2>
+        <p class="hub-card-desc">
+          Auto-updates likes in real-time from your YouTube Live stream. Features floating heart/thumb bursts, celebration confetti, and customizable goal rewards.
+        </p>
+        <div class="hub-card-btn btn-red">Open Like Controller &rarr;</div>
+      </a>
+
+      <!-- Chess.com Score Tracker -->
+      <a href="control.html" class="hub-card chess">
+        <span class="hub-icon">♟️</span>
+        <h2 class="hub-card-title">Chess.com Overlay</h2>
+        <p class="hub-card-desc">
+          Live W/L/D session score tracker, rating diff calculation, win streak counter, and match victory celebration toasts for Chess.com streamers.
+        </p>
+        <div class="hub-card-btn btn-green">Open Chess Controller &rarr;</div>
+      </a>
+    </div>
+  </div>
 </body>
 </html>

@@ -6,6 +6,7 @@ Zero external dependencies (uses Python standard library only).
 
 import os
 import sys
+import re
 import json
 import time
 import socket
@@ -19,7 +20,8 @@ import webbrowser
 
 PORT = 5050
 STATE_FILE = Path(__file__).parent / "session_state.json"
-USER_AGENT = "ChessStreamOverlay/2.0 (StreamerSessionOverlay; contact@chess-overlay.local)"
+LIKES_STATE_FILE = Path(__file__).parent / "likes_state.json"
+USER_AGENT = "StreamOverlay/2.0 (StreamerSessionOverlay; contact@stream-overlay.local)"
 
 DEFAULT_STATE = {
     "username": "",
@@ -51,8 +53,252 @@ DEFAULT_STATE = {
     "statusMessage": "Ready. Set your Chess.com username in the control panel."
 }
 
+DEFAULT_LIKES_STATE = {
+    "likes": 0,
+    "goal": 50,
+    "goalStep": 50,
+    "autoBumpGoal": True,
+    "rewardText": "LIKE GOAL",
+    "youtubeUrl": "",
+    "videoId": "",
+    "apiKey": "",
+    "autoUpdate": False,
+    "pollInterval": 5,
+    "lastPolled": None,
+    "lastUpdated": None,
+    "status": "ready",
+    "statusMessage": "Ready. Enter your YouTube Live URL or use manual controls.",
+    "streamTitle": "",
+    "settings": {
+        "layout": "bar",
+        "theme": "youtube",
+        "icon": "thumb",
+        "soundEnabled": True,
+        "soundVolume": 0.5,
+        "scale": 100,
+        "showPercentage": True,
+        "showGoal": True,
+        "showRemaining": True,
+        "accentColor": "#ff0033"
+    }
+}
+
 state_lock = threading.Lock()
 state = {}
+
+likes_lock = threading.Lock()
+likes_state = {}
+
+def load_likes_state():
+    global likes_state
+    if LIKES_STATE_FILE.exists():
+        try:
+            with open(LIKES_STATE_FILE, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+                likes_state = {**DEFAULT_LIKES_STATE, **loaded}
+                likes_state["settings"] = {**DEFAULT_LIKES_STATE["settings"], **loaded.get("settings", {})}
+                return
+        except Exception as e:
+            print(f"[Warning] Failed to load likes_state.json: {e}")
+    likes_state = dict(DEFAULT_LIKES_STATE)
+    save_likes_state()
+
+def save_likes_state():
+    try:
+        with open(LIKES_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(likes_state, f, indent=2)
+    except Exception as e:
+        print(f"[Error] Failed to save likes_state.json: {e}")
+
+def parse_like_number(text):
+    if not text:
+        return 0
+    t = text.strip().upper().replace(",", "").replace(" ", "")
+    try:
+        if "M" in t:
+            return int(float(t.replace("M", "")) * 1000000)
+        if "K" in t:
+            return int(float(t.replace("K", "")) * 1000)
+        return int(float(t))
+    except Exception:
+        return 0
+
+def resolve_youtube_likes(identifier, identifier_type="raw", api_key=""):
+    """
+    Fetches like count and stream title for a given video ID, stream URL, or channel handle.
+    Supports official YouTube Data API v3 and direct public scraper.
+    """
+    if not identifier:
+        return {"success": False, "error": "No identifier provided"}
+
+    ident = identifier.strip()
+    video_id = None
+
+    # Check for direct 11-char video ID
+    if re.match(r'^[a-zA-Z0-9_-]{11}$', ident):
+        video_id = ident
+        identifier_type = "video_id"
+    else:
+        # Check standard YouTube URLs
+        m_vid = re.search(r'(?:v=|\/live\/|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})', ident)
+        if m_vid:
+            video_id = m_vid.group(1)
+            identifier_type = "video_id"
+        elif "@" in ident:
+            identifier_type = "channel"
+
+    title = ""
+    like_count = None
+
+    # Step 1: Official YouTube Data API v3 (if API key is provided)
+    if api_key and video_id:
+        try:
+            api_url = f"https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id={video_id}&key={api_key}"
+            req = urllib.request.Request(api_url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                if resp.status == 200:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    items = data.get("items", [])
+                    if items:
+                        item = items[0]
+                        stats = item.get("statistics", {})
+                        snip = item.get("snippet", {})
+                        title = snip.get("title", "")
+                        like_str = stats.get("likeCount")
+                        if like_str is not None:
+                            return {
+                                "success": True,
+                                "likes": int(like_str),
+                                "title": title,
+                                "videoId": video_id
+                            }
+        except Exception:
+            pass
+
+    # Step 2: Public Scraping
+    target_url = None
+    if identifier_type == "channel":
+        handle = ident if ident.startswith("@") else f"@{ident}"
+        target_url = f"https://www.youtube.com/{handle}/live"
+    elif video_id:
+        target_url = f"https://www.youtube.com/watch?v={video_id}"
+    elif ident.startswith("http"):
+        target_url = ident
+    else:
+        target_url = f"https://www.youtube.com/watch?v={ident}"
+
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+        }
+        req = urllib.request.Request(target_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+
+            # Extract video ID if not yet determined
+            if not video_id:
+                m_vid2 = re.search(r'"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"', html)
+                if not m_vid2:
+                    m_vid2 = re.search(r'canonical"\s+href="https://www\.youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})"', html)
+                if m_vid2:
+                    video_id = m_vid2.group(1)
+
+            # Extract Title
+            m_title = re.search(r'<meta\s+name="title"\s+content="([^"]+)"', html)
+            if not m_title:
+                m_title = re.search(r'<title>([^<]+)</title>', html)
+            if m_title:
+                title = m_title.group(1).replace(" - YouTube", "").strip()
+
+            # Pattern A: in ytInitialData or JSON ("likeCount":"123")
+            m_likes = re.search(r'"likeCount"\s*:\s*"(\d+)"', html)
+            if m_likes:
+                like_count = int(m_likes.group(1))
+
+            # Pattern B: in accessibilityData label "123 likes" or "1.2K likes"
+            if like_count is None:
+                m_acc = re.search(r'"accessibilityData"\s*:\s*\{\s*"label"\s*:\s*"([0-9,.]+[KMkm]?)\s+likes', html, re.I)
+                if m_acc:
+                    like_count = parse_like_number(m_acc.group(1))
+
+            # Pattern C: general "X likes"
+            if like_count is None:
+                m_gen = re.search(r'([0-9,.]+[KMkm]?)\s+(?:likes|people liked this)', html, re.I)
+                if m_gen:
+                    like_count = parse_like_number(m_gen.group(1))
+
+            # Pattern D: structured data UserInteractionCount
+            if like_count is None:
+                m_ld = re.search(r'"LikeAction"[^}]*\},?\s*"userInteractionCount"\s*:\s*"(\d+)"', html)
+                if m_ld:
+                    like_count = int(m_ld.group(1))
+
+            if like_count is not None:
+                return {
+                    "success": True,
+                    "likes": like_count,
+                    "title": title or (f"Video {video_id}" if video_id else "YouTube Stream"),
+                    "videoId": video_id or ""
+                }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    return {"success": False, "error": "Could not extract like count from stream page"}
+
+def likes_poller_thread():
+    """Background polling worker for live YouTube stream like count updates."""
+    while True:
+        poll_interval = 5
+        try:
+            with likes_lock:
+                auto_update = likes_state.get("autoUpdate", False)
+                yt_url = likes_state.get("youtubeUrl", "").strip()
+                video_id = likes_state.get("videoId", "").strip()
+                api_key = likes_state.get("apiKey", "").strip()
+                poll_interval = likes_state.get("pollInterval", 5)
+
+            if auto_update and (yt_url or video_id):
+                ident = video_id if video_id else yt_url
+                ident_type = "video_id" if video_id else ("channel" if "@" in yt_url else "raw")
+                res = resolve_youtube_likes(ident, ident_type, api_key)
+
+                if res.get("success"):
+                    new_likes = res["likes"]
+                    title = res.get("title", "")
+                    vid = res.get("videoId", "")
+                    with likes_lock:
+                        old_likes = likes_state.get("likes", 0)
+                        likes_state["likes"] = new_likes
+                        if title:
+                            likes_state["streamTitle"] = title
+                        if vid:
+                            likes_state["videoId"] = vid
+                        likes_state["lastPolled"] = int(time.time())
+                        likes_state["lastUpdated"] = int(time.time())
+                        likes_state["status"] = "active"
+                        likes_state["statusMessage"] = f"Live: {new_likes:,} likes"
+
+                        # Auto-bump goal if reached
+                        if likes_state.get("autoBumpGoal", True) and new_likes >= likes_state.get("goal", 50):
+                            step = likes_state.get("goalStep", 50)
+                            g = likes_state.get("goal", 50)
+                            while g <= new_likes:
+                                g += step
+                            likes_state["goal"] = g
+
+                        if new_likes != old_likes:
+                            save_likes_state()
+                            print(f"[Like Update] Stream Likes: {old_likes} -> {new_likes} ({title or 'Live Stream'})")
+                else:
+                    with likes_lock:
+                        likes_state["lastPolled"] = int(time.time())
+        except Exception:
+            pass
+
+        time.sleep(max(3, poll_interval))
 
 def load_state():
     global state
@@ -345,6 +591,12 @@ class OverlayRequestHandler(SimpleHTTPRequestHandler):
             self._send_json(resp)
             return
 
+        if self.path == "/api/likes":
+            with likes_lock:
+                resp = dict(likes_state)
+            self._send_json(resp)
+            return
+
         if self.path == "/api/latest-games":
             # Returns the last 10 games from Chess.com so the user can import any missed game
             with state_lock:
@@ -511,6 +763,83 @@ class OverlayRequestHandler(SimpleHTTPRequestHandler):
             self._send_json({"success": True, "testGame": test_game})
             return
 
+        if self.path == "/api/likes":
+            with likes_lock:
+                if "likes" in payload:
+                    likes_state["likes"] = max(0, int(payload["likes"]))
+                if "goal" in payload:
+                    likes_state["goal"] = max(1, int(payload["goal"]))
+                if "goalStep" in payload:
+                    likes_state["goalStep"] = max(1, int(payload["goalStep"]))
+                if "autoBumpGoal" in payload:
+                    likes_state["autoBumpGoal"] = bool(payload["autoBumpGoal"])
+                if "rewardText" in payload:
+                    likes_state["rewardText"] = str(payload["rewardText"])
+                if "youtubeUrl" in payload:
+                    likes_state["youtubeUrl"] = str(payload["youtubeUrl"]).strip()
+                if "videoId" in payload:
+                    likes_state["videoId"] = str(payload["videoId"]).strip()
+                if "apiKey" in payload:
+                    likes_state["apiKey"] = str(payload["apiKey"]).strip()
+                if "autoUpdate" in payload:
+                    likes_state["autoUpdate"] = bool(payload["autoUpdate"])
+                if "pollInterval" in payload:
+                    likes_state["pollInterval"] = max(3, int(payload["pollInterval"]))
+                if "settings" in payload and isinstance(payload["settings"], dict):
+                    likes_state["settings"].update(payload["settings"])
+                save_likes_state()
+            self._send_json({"success": True, "state": likes_state})
+            return
+
+        if self.path == "/api/likes/youtube":
+            ident = payload.get("identifier") or payload.get("url") or ""
+            ident_type = payload.get("identifierType", "raw")
+            api_key = payload.get("apiKey") or likes_state.get("apiKey", "")
+            res = resolve_youtube_likes(ident, ident_type, api_key)
+            if res.get("success"):
+                with likes_lock:
+                    new_likes = res["likes"]
+                    likes_state["likes"] = new_likes
+                    if res.get("title"):
+                        likes_state["streamTitle"] = res["title"]
+                    if res.get("videoId"):
+                        likes_state["videoId"] = res["videoId"]
+                    likes_state["lastPolled"] = int(time.time())
+                    likes_state["lastUpdated"] = int(time.time())
+                    likes_state["status"] = "active"
+                    likes_state["statusMessage"] = f"Live: {new_likes:,} likes"
+                    if likes_state.get("autoBumpGoal", True) and new_likes >= likes_state.get("goal", 50):
+                        step = likes_state.get("goalStep", 50)
+                        g = likes_state.get("goal", 50)
+                        while g <= new_likes:
+                            g += step
+                        likes_state["goal"] = g
+                    save_likes_state()
+            self._send_json(res)
+            return
+
+        if self.path == "/api/likes/add":
+            delta = int(payload.get("delta", 1))
+            with likes_lock:
+                likes_state["likes"] = max(0, likes_state["likes"] + delta)
+                if likes_state.get("autoBumpGoal", True) and likes_state["likes"] >= likes_state.get("goal", 50):
+                    step = likes_state.get("goalStep", 50)
+                    g = likes_state.get("goal", 50)
+                    while g <= likes_state["likes"]:
+                        g += step
+                    likes_state["goal"] = g
+                save_likes_state()
+            self._send_json({"success": True, "likes": likes_state["likes"]})
+            return
+
+        if self.path == "/api/likes/set":
+            val = int(payload.get("likes", 0))
+            with likes_lock:
+                likes_state["likes"] = max(0, val)
+                save_likes_state()
+            self._send_json({"success": True, "likes": likes_state["likes"]})
+            return
+
         self.send_error(404, "Endpoint not found")
 
 def find_available_port(start_port=5050):
@@ -525,25 +854,31 @@ def find_available_port(start_port=5050):
 
 def run_server():
     load_state()
+    load_likes_state()
     port = find_available_port(PORT)
     server_address = ("127.0.0.1", port)
 
     httpd = HTTPServer(server_address, OverlayRequestHandler)
 
-    t = threading.Thread(target=poller_thread, daemon=True)
-    t.start()
+    t1 = threading.Thread(target=poller_thread, daemon=True)
+    t1.start()
 
-    print("\n" + "=" * 65)
-    print(" ♚ CHESS.COM STREAM OVERLAY SERVER RUNNING")
-    print("=" * 65)
-    print(f" Control Dashboard : http://localhost:{port}/control.html")
-    print(f" OBS Overlay URL   : http://localhost:{port}/overlay.html")
-    print("=" * 65)
-    print(" [!] IMPORTANT: Keep this window OPEN or MINIMIZED while streaming.")
+    t2 = threading.Thread(target=likes_poller_thread, daemon=True)
+    t2.start()
+
+    print("\n" + "=" * 68)
+    print(" 🎬 LIVE STREAM OVERLAY SUITE RUNNING")
+    print("=" * 68)
+    print(f" 👍 Like Counter Control : http://localhost:{port}/likes-control.html")
+    print(f" 👍 Like Counter Overlay : http://localhost:{port}/likes-overlay.html")
+    print(f" ♚ Chess Session Control : http://localhost:{port}/control.html")
+    print(f" ♚ Chess Session Overlay : http://localhost:{port}/overlay.html")
+    print("=" * 68)
+    print(" [!] Keep this window OPEN or MINIMIZED while streaming.")
     print(" Press Ctrl+C to stop.\n")
 
     try:
-        webbrowser.open(f"http://localhost:{port}/control.html")
+        webbrowser.open(f"http://localhost:{port}/likes-control.html")
     except Exception:
         pass
 

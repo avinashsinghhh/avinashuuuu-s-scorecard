@@ -1,0 +1,607 @@
+/* ==========================================================================
+   Stream Like Counter Overlay - Stylesheet
+   ========================================================================== */
+
+:root {
+  --primary-accent: #ff0033;
+  --secondary-accent: #ff4d6d;
+  --accent-glow: rgba(255, 0, 51, 0.45);
+  --bg-surface: rgba(18, 20, 26, 0.90);
+  --bg-border: rgba(255, 255, 255, 0.12);
+  --track-bg: rgba(255, 255, 255, 0.10);
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --text-sub: #cbd5e1;
+  --gold-accent: #f59e0b;
+  --radius-card: 16px;
+  --radius-bar: 999px;
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', Helvetica, Arial, sans-serif;
+  --scale: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Themes
+   -------------------------------------------------------------------------- */
+body.theme-youtube {
+  --primary-accent: #ff0033;
+  --secondary-accent: #ff3366;
+  --accent-glow: rgba(255, 0, 51, 0.50);
+  --bg-surface: rgba(15, 15, 18, 0.92);
+  --bg-border: rgba(255, 0, 51, 0.25);
+  --track-bg: rgba(255, 255, 255, 0.12);
+}
+
+body.theme-neon {
+  --primary-accent: #00f2fe;
+  --secondary-accent: #ff007f;
+  --accent-glow: rgba(0, 242, 254, 0.55);
+  --bg-surface: rgba(10, 11, 24, 0.92);
+  --bg-border: rgba(0, 242, 254, 0.35);
+  --track-bg: rgba(0, 242, 254, 0.15);
+}
+
+body.theme-emerald {
+  --primary-accent: #10b981;
+  --secondary-accent: #34d399;
+  --accent-glow: rgba(16, 185, 129, 0.50);
+  --bg-surface: rgba(11, 23, 19, 0.92);
+  --bg-border: rgba(16, 185, 129, 0.30);
+  --track-bg: rgba(255, 255, 255, 0.12);
+}
+
+body.theme-purple {
+  --primary-accent: #9333ea;
+  --secondary-accent: #c084fc;
+  --accent-glow: rgba(147, 51, 234, 0.50);
+  --bg-surface: rgba(19, 13, 31, 0.92);
+  --bg-border: rgba(168, 85, 247, 0.30);
+  --track-bg: rgba(255, 255, 255, 0.12);
+}
+
+body.theme-sunset {
+  --primary-accent: #f97316;
+  --secondary-accent: #fbbf24;
+  --accent-glow: rgba(249, 115, 22, 0.50);
+  --bg-surface: rgba(24, 16, 13, 0.92);
+  --bg-border: rgba(249, 115, 22, 0.30);
+  --track-bg: rgba(255, 255, 255, 0.12);
+}
+
+body.theme-minimal {
+  --primary-accent: #ffffff;
+  --secondary-accent: #cbd5e1;
+  --accent-glow: rgba(255, 255, 255, 0.35);
+  --bg-surface: rgba(20, 24, 33, 0.82);
+  --bg-border: rgba(255, 255, 255, 0.15);
+  --track-bg: rgba(255, 255, 255, 0.15);
+}
+
+/* --------------------------------------------------------------------------
+   Base Environment
+   -------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  background: transparent !important;
+  color: var(--text-main);
+  font-family: var(--font-family);
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+#overlay-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px;
+  transform-origin: top left;
+}
+
+/* --------------------------------------------------------------------------
+   Particle Layer (Floating Likes / Hearts)
+   -------------------------------------------------------------------------- */
+.particles-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 100;
+}
+
+.floating-particle {
+  position: absolute;
+  font-size: 24px;
+  pointer-events: none;
+  animation: floatUp 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.6) rotate(0deg);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0px) scale(1.3) rotate(-8deg);
+  }
+  60% {
+    opacity: 0.9;
+    transform: translateY(-80px) scale(1.1) rotate(10deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-160px) scale(0.7) rotate(-14deg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Confetti Canvas
+   -------------------------------------------------------------------------- */
+#confetti-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 200;
+}
+
+/* --------------------------------------------------------------------------
+   Goal Achieved Milestone Toast
+   -------------------------------------------------------------------------- */
+.goal-toast {
+  position: absolute;
+  top: -80px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.5), 0 0 20px rgba(239, 68, 68, 0.4);
+  font-weight: 800;
+  z-index: 150;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+  transform: translateY(0);
+}
+
+.goal-toast.active {
+  transform: translateY(96px);
+}
+
+.goal-toast-icon {
+  font-size: 26px;
+  animation: spinTrophy 2s infinite ease-in-out;
+}
+
+@keyframes spinTrophy {
+  0%, 100% { transform: rotate(-10deg) scale(1); }
+  50% { transform: rotate(10deg) scale(1.2); }
+}
+
+.goal-toast-title {
+  font-size: 13px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.goal-toast-subtitle {
+  font-size: 11px;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Main Widget Card
+   -------------------------------------------------------------------------- */
+.likes-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 18px var(--accent-glow);
+  border-radius: var(--radius-card);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.card-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  opacity: 0.18;
+  pointer-events: none;
+  animation: pulseGlow 4s infinite alternate ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.9); opacity: 0.15; }
+  100% { transform: scale(1.15); opacity: 0.35; }
+}
+
+/* --------------------------------------------------------------------------
+   Icon Bubble
+   -------------------------------------------------------------------------- */
+.icon-bubble {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+  box-shadow: 0 4px 16px var(--accent-glow);
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-symbol {
+  display: inline-block;
+  line-height: 1;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-bubble.bump {
+  animation: iconBounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes iconBounce {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.38) rotate(-12deg); }
+  65% { transform: scale(0.90) rotate(6deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* --------------------------------------------------------------------------
+   Content Details
+   -------------------------------------------------------------------------- */
+.card-content {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  line-height: 1.2;
+}
+
+.reward-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.percent-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  letter-spacing: 0.3px;
+}
+
+/* --------------------------------------------------------------------------
+   Counter Row
+   -------------------------------------------------------------------------- */
+.content-counter {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 2px 0 6px;
+}
+
+.like-number {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
+}
+
+.like-number.bump {
+  animation: numberPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: var(--secondary-accent);
+  text-shadow: 0 0 16px var(--accent-glow);
+}
+
+@keyframes numberPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.32); }
+  100% { transform: scale(1); }
+}
+
+.goal-separator {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.goal-number {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-sub);
+}
+
+.likes-text-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.remaining-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* --------------------------------------------------------------------------
+   Progress Track & Fill
+   -------------------------------------------------------------------------- */
+.progress-track {
+  position: relative;
+  width: 100%;
+  height: 9px;
+  background: var(--track-bg);
+  border-radius: var(--radius-bar);
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.progress-fill {
+  position: relative;
+  height: 100%;
+  border-radius: var(--radius-bar);
+  background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+  box-shadow: 0 0 12px var(--accent-glow);
+  transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.progress-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  animation: shimmerMove 2.2s infinite;
+  transform: translateX(-100%);
+}
+
+@keyframes shimmerMove {
+  100% { transform: translateX(100%); }
+}
+
+/* ==========================================================================
+   LAYOUT SPECIFICS
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Layout 1: Horizontal Bar (Default)
+   -------------------------------------------------------------------------- */
+body.layout-bar .likes-card {
+  width: 440px;
+  padding: 12px 18px;
+  gap: 14px;
+}
+
+body.layout-bar .icon-bubble {
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   Layout 2: Compact Pill
+   -------------------------------------------------------------------------- */
+body.layout-pill .likes-card {
+  width: auto;
+  max-width: 340px;
+  padding: 8px 14px;
+  gap: 10px;
+  border-radius: 999px;
+}
+
+body.layout-pill .icon-bubble {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  border-radius: 999px;
+}
+
+body.layout-pill .content-header {
+  display: none;
+}
+
+body.layout-pill .content-counter {
+  margin: 0;
+  gap: 4px;
+}
+
+body.layout-pill .like-number {
+  font-size: 18px;
+}
+
+body.layout-pill .goal-separator {
+  font-size: 14px;
+}
+
+body.layout-pill .goal-number {
+  font-size: 14px;
+}
+
+body.layout-pill .likes-text-label {
+  display: none;
+}
+
+body.layout-pill .remaining-badge {
+  display: none;
+}
+
+body.layout-pill .progress-track {
+  height: 5px;
+  margin-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Layout 3: Badge / Counter Only
+   -------------------------------------------------------------------------- */
+body.layout-badge .likes-card {
+  width: auto;
+  padding: 10px 18px;
+  gap: 12px;
+  border-radius: 18px;
+}
+
+body.layout-badge .icon-bubble {
+  width: 44px;
+  height: 44px;
+  font-size: 24px;
+  border-radius: 12px;
+}
+
+body.layout-badge .content-header {
+  display: none;
+}
+
+body.layout-badge .progress-track {
+  display: none;
+}
+
+body.layout-badge .goal-separator,
+body.layout-badge .goal-number,
+body.layout-badge .remaining-badge {
+  display: none;
+}
+
+body.layout-badge .like-number {
+  font-size: 32px;
+}
+
+body.layout-badge .likes-text-label {
+  font-size: 14px;
+  color: var(--secondary-accent);
+}
+
+/* --------------------------------------------------------------------------
+   Layout 4: Vertical Tower (Sidebars & Mobile 9:16)
+   -------------------------------------------------------------------------- */
+body.layout-tower .likes-card {
+  flex-direction: column;
+  width: 140px;
+  padding: 16px 14px;
+  gap: 12px;
+  text-align: center;
+}
+
+body.layout-tower .icon-bubble {
+  width: 52px;
+  height: 52px;
+  font-size: 28px;
+}
+
+body.layout-tower .card-content {
+  width: 100%;
+  align-items: center;
+}
+
+body.layout-tower .content-header {
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.layout-tower .reward-title {
+  max-width: 110px;
+  font-size: 10px;
+}
+
+body.layout-tower .content-counter {
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 6px 0 8px;
+}
+
+body.layout-tower .like-number {
+  font-size: 28px;
+  width: 100%;
+}
+
+body.layout-tower .likes-text-label {
+  display: none;
+}
+
+body.layout-tower .remaining-badge {
+  margin: 0;
+  width: 100%;
+  text-align: center;
+}
+
+body.layout-tower .progress-track {
+  height: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   Layout 5: Floating Stream Card
+   -------------------------------------------------------------------------- */
+body.layout-card .likes-card {
+  width: 420px;
+  padding: 16px 20px;
+  gap: 16px;
+  border-radius: 20px;
+}
+
+body.layout-card .icon-bubble {
+  width: 56px;
+  height: 56px;
+  font-size: 30px;
+  border-radius: 16px;
+}
+
+body.layout-card .like-number {
+  font-size: 30px;
+}
+
+body.layout-card .progress-track {
+  height: 10px;
+}

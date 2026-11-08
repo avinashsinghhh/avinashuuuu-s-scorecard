@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Like Counter Overlay</title>
+  <link rel="stylesheet" href="likes-overlay.css">
+</head>
+<body class="theme-youtube layout-bar">
+  <div id="overlay-container">
+    <!-- Confetti Canvas for Goal Celebration -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Floating Particles Container (Hearts/Thumbs) -->
+    <div id="particles-layer" class="particles-layer"></div>
+
+    <!-- Goal Achieved Milestone Toast Banner -->
+    <div id="goal-toast" class="goal-toast" style="display: none;">
+      <span class="goal-toast-icon">🎉</span>
+      <div class="goal-toast-content">
+        <div class="goal-toast-title">GOAL REACHED!</div>
+        <div class="goal-toast-subtitle" id="goal-toast-sub">50 / 50 LIKES</div>
+      </div>
+    </div>
+
+    <!-- Main Overlay Widget -->
+    <div class="likes-card" id="likes-card">
+      <!-- Glow Aura -->
+      <div class="card-glow" id="card-glow"></div>
+
+      <!-- Icon Section -->
+      <div class="icon-bubble" id="icon-bubble">
+        <span class="icon-symbol" id="icon-symbol">👍</span>
+      </div>
+
+      <!-- Center / Content Details -->
+      <div class="card-content">
+        <!-- Header Row (Title & Percentage) -->
+        <div class="content-header" id="content-header">
+          <span class="reward-title" id="reward-title">LIKE GOAL</span>
+          <div class="percent-badge" id="percent-badge">0%</div>
+        </div>
+
+        <!-- Counter Row -->
+        <div class="content-counter">
+          <span class="like-number" id="like-number">0</span>
+          <span class="goal-separator" id="goal-separator">/</span>
+          <span class="goal-number" id="goal-number">50</span>
+          <span class="likes-text-label" id="likes-text-label">LIKES</span>
+          <span class="remaining-badge" id="remaining-badge">(50 to go)</span>
+        </div>
+
+        <!-- Progress Bar Track -->
+        <div class="progress-track" id="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width: 0%;">
+            <div class="progress-shimmer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="likes-overlay.js"></script>
+</body>
+</html>

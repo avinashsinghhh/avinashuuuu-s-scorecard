@@ -1,0 +1,29 @@
+{
+  "likes": 63,
+  "goal": 150,
+  "goalStep": 50,
+  "autoBumpGoal": true,
+  "rewardText": "LIKE GOAL",
+  "youtubeUrl": "https://www.youtube.com/watch?v=Mey37ze25GI&t=2212s",
+  "videoId": "Mey37ze25GI",
+  "apiKey": "",
+  "autoUpdate": true,
+  "pollInterval": 5,
+  "lastPolled": 1794178036,
+  "lastUpdated": 1794178036,
+  "status": "active",
+  "statusMessage": "Live: 63 likes",
+  "streamTitle": "Playing Rapid and Chess with Viewers . Diwali Special Chutku stream.",
+  "settings": {
+    "layout": "bar",
+    "theme": "youtube",
+    "icon": "thumb",
+    "soundEnabled": true,
+    "soundVolume": 0.5,
+    "scale": 100,
+    "showPercentage": true,
+    "showGoal": true,
+    "showRemaining": true,
+    "accentColor": "#ff0033"
+  }
+}
