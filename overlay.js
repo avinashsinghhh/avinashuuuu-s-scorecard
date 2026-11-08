@@ -1,5 +1,6 @@
 /**
- * Chess Stream Overlay - Live Display Logic (Netlify & Standalone Ready)
+ * Chess Stream Overlay - Live Display Logic
+ * 100% Self-Contained & Resilient (Zero External Dependencies)
  */
 
 (function () {
@@ -27,6 +28,20 @@
   const lastGameText = document.getElementById('last-game-text');
   const eventToast = document.getElementById('event-toast');
 
+  // Built-in Helpers (Zero external dependency)
+  function calcWinRate(w, l, d) {
+    const total = w + l + d;
+    if (total === 0) return '0%';
+    return `${Math.round((w / total) * 100)}%`;
+  }
+
+  function fmtRatingDiff(diff) {
+    if (diff === null || diff === undefined || isNaN(diff)) return '±0';
+    if (diff > 0) return `+${diff}`;
+    if (diff < 0) return `${diff}`;
+    return '±0';
+  }
+
   let state = {
     username: params.get('user') || params.get('username') || '',
     wins: 0,
@@ -53,14 +68,9 @@
     }
   };
 
-  let prevState = {
-    wins: 0,
-    losses: 0,
-    draws: 0
-  };
+  let prevState = { wins: 0, losses: 0, draws: 0 };
   let isFirstLoad = true;
 
-  // Apply URL param overrides
   function applyUrlOverrides(s) {
     const res = { ...s };
     if (params.has('theme')) res.theme = params.get('theme');
@@ -82,7 +92,7 @@
 
     setTimeout(() => {
       eventToast.classList.remove('show');
-    }, 4000);
+    }, 3500);
   }
 
   function bumpElement(el) {
@@ -160,16 +170,18 @@
       }
     }
 
-    valWins.textContent = wins;
-    valLosses.textContent = losses;
-    valDraws.textContent = draws;
+    if (valWins) valWins.textContent = wins;
+    if (valLosses) valLosses.textContent = losses;
+    if (valDraws) valDraws.textContent = draws;
 
-    boxDraws.style.display = settings.showDraws !== false ? 'inline-flex' : 'none';
+    if (boxDraws) {
+      boxDraws.style.display = settings.showDraws !== false ? 'inline-flex' : 'none';
+    }
 
     // Win Rate
-    if (winrateBadge) {
+    if (winrateBadge && valWinrate) {
       winrateBadge.style.display = settings.showWinRate !== false ? 'block' : 'none';
-      valWinrate.textContent = calculateWinRate(wins, losses, draws);
+      valWinrate.textContent = calcWinRate(wins, losses, draws);
     }
 
     // Streak
@@ -193,20 +205,20 @@
     }
 
     // Rating
-    if (ratingBadge) {
+    if (ratingBadge && valRating && valRatingDiff) {
       if (settings.showRating !== false && state.activeRating) {
         ratingBadge.style.display = 'inline-flex';
         valRating.textContent = state.activeRating;
         const diff = state.ratingDiff || 0;
-        valRatingDiff.textContent = formatRatingDiff(diff);
+        valRatingDiff.textContent = fmtRatingDiff(diff);
         valRatingDiff.className = 'rating-diff ' + (diff > 0 ? 'positive' : diff < 0 ? 'negative' : 'neutral');
       } else {
         ratingBadge.style.display = 'none';
       }
     }
 
-    // Last Game preview (for card layout)
-    if (lastGamePreview) {
+    // Last Game preview
+    if (lastGamePreview && lastGameText) {
       if (settings.layout === 'card' && state.lastGame) {
         lastGamePreview.style.display = 'flex';
         const lg = state.lastGame;
@@ -221,21 +233,31 @@
     isFirstLoad = false;
   }
 
-  // Polling server / fallback to storage
+  // Endpoints to try (supports relative, localhost:5050, 127.0.0.1:5050)
+  const apiUrls = [
+    '/api/state',
+    'http://localhost:5050/api/state',
+    'http://127.0.0.1:5050/api/state'
+  ];
+
   async function fetchServerState() {
-    try {
-      const res = await fetch('/api/state', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        renderState(data);
-        return true;
+    for (const url of apiUrls) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          renderState(data);
+          return true;
+        }
+      } catch (e) {
+        // try next endpoint
       }
-    } catch (e) {}
+    }
     return false;
   }
 
-  // Standalone Direct Polling for Netlify hosting
-  async function directNetlifyPoll() {
+  // Standalone Direct Polling for Netlify or standalone file
+  async function directChesscomPoll() {
     const user = state.username || params.get('user') || params.get('username');
     if (!user) return;
 
@@ -265,15 +287,31 @@
           continue;
         }
 
-        const parsed = parseChessGame(g, user);
-        if (!parsed) continue;
+        const userLower = user.toLowerCase();
+        const white = g.white || {};
+        const black = g.black || {};
+        const isWhite = (white.username || '').toLowerCase() === userLower;
+        const isBlack = (black.username || '').toLowerCase() === userLower;
+        if (!isWhite && !isBlack) continue;
 
-        if (parsed.outcome === 'win') state.wins = (state.wins || 0) + 1;
-        else if (parsed.outcome === 'loss') state.losses = (state.losses || 0) + 1;
-        else if (parsed.outcome === 'draw') state.draws = (state.draws || 0) + 1;
+        const myData = isWhite ? white : black;
+        const oppData = isWhite ? black : white;
+        const myRes = (myData.result || '').toLowerCase();
 
-        if (parsed.userRating) state.activeRating = parsed.userRating;
-        state.lastGame = parsed;
+        let outcome = 'draw';
+        if (myRes === 'win') outcome = 'win';
+        else if (['checkmated', 'timeout', 'resigned', 'abandoned', 'lose'].includes(myRes)) outcome = 'loss';
+
+        if (outcome === 'win') state.wins = (state.wins || 0) + 1;
+        else if (outcome === 'loss') state.losses = (state.losses || 0) + 1;
+        else if (outcome === 'draw') state.draws = (state.draws || 0) + 1;
+
+        if (myData.rating) state.activeRating = myData.rating;
+        state.lastGame = {
+          outcome,
+          oppUsername: oppData.username || 'Opponent',
+          timeClass: g.time_class || 'chess'
+        };
         processedSet.add(url);
         updated = true;
       }
@@ -288,7 +326,6 @@
   async function updateCycle() {
     const hasServer = await fetchServerState();
     if (!hasServer) {
-      // Check localStorage
       try {
         const raw = localStorage.getItem('chess_overlay_state');
         if (raw) {
@@ -296,12 +333,11 @@
         }
       } catch (e) {}
 
-      // Direct poll Chess.com on Netlify
-      await directNetlifyPoll();
+      await directChesscomPoll();
     }
   }
 
-  // Cross-tab broadcast channel listener
+  // Cross-window sync via BroadcastChannel
   if (typeof BroadcastChannel !== 'undefined') {
     const bc = new BroadcastChannel('chess_overlay_channel');
     bc.onmessage = (e) => {
@@ -319,28 +355,7 @@
     }
   });
 
-  // PeerJS WebRTC Remote Control Receiver (Syncs across devices & OBS without server)
-  function initWebRTCReceiver() {
-    const user = (params.get('user') || params.get('username') || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!user || typeof Peer === 'undefined') return;
-
-    try {
-      const peer = new Peer('chess-obs-' + user);
-      peer.on('open', (id) => {
-        console.log('[OBS Overlay] WebRTC sync online for room:', id);
-      });
-      peer.on('connection', (conn) => {
-        conn.on('data', (data) => {
-          if (data && data.type === 'STATE_UPDATE') {
-            renderState(data.state);
-          }
-        });
-      });
-      peer.on('error', () => {});
-    } catch (e) {}
-  }
-
+  // Fast 800ms polling cycle
   updateCycle();
-  setInterval(updateCycle, 3000);
-  setTimeout(initWebRTCReceiver, 1000);
+  setInterval(updateCycle, 800);
 })();

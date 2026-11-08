@@ -1,8 +1,8 @@
 {
   "username": "avinashsinghhhh",
   "wins": 0,
-  "losses": 0,
-  "draws": 0,
+  "losses": 3,
+  "draws": 2,
   "sessionStartTime": 1794173024,
   "baselineRatings": {
     "blitz": 1577,
@@ -125,8 +125,8 @@
     "https://www.chess.com/game/live/186797727468",
     "https://www.chess.com/game/live/186382506152",
     "https://www.chess.com/game/live/186458294274",
-    "https://www.chess.com/game/live/186455222316",
     "https://www.chess.com/game/live/186480266722",
+    "https://www.chess.com/game/live/186455222316",
     "https://www.chess.com/game/live/186455802850",
     "https://www.chess.com/game/live/186395999938",
     "https://www.chess.com/game/live/186327469682",
@@ -226,6 +226,7 @@
     "https://www.chess.com/game/live/186800558112",
     "https://www.chess.com/game/live/186362277294",
     "https://www.chess.com/game/live/186328788776",
+    "https://www.chess.com/game/live/186809372708",
     "https://www.chess.com/game/live/186711774540",
     "https://www.chess.com/game/live/186474480018",
     "https://www.chess.com/game/live/186481050138",
@@ -238,8 +239,8 @@
     "https://www.chess.com/game/live/186575550574",
     "https://www.chess.com/game/live/186480668766",
     "https://www.chess.com/game/live/186454673424",
-    "https://www.chess.com/game/live/186362733952",
     "https://www.chess.com/game/live/186610673848",
+    "https://www.chess.com/game/live/186362733952",
     "https://www.chess.com/game/live/186459285704",
     "https://www.chess.com/game/live/186480508772",
     "https://www.chess.com/game/live/186804689760",
@@ -306,8 +307,8 @@
     "https://www.chess.com/game/live/186362059544",
     "https://www.chess.com/game/live/186362376072",
     "https://www.chess.com/game/live/186462954104",
-    "https://www.chess.com/game/live/186805877758",
     "https://www.chess.com/game/live/186328207904",
+    "https://www.chess.com/game/live/186805877758",
     "https://www.chess.com/game/live/186674814716",
     "https://www.chess.com/game/live/186474782668",
     "https://www.chess.com/game/live/186543661450",
@@ -1529,11 +1530,70 @@
       "url": "https://www.chess.com",
       "endTime": 1794173022,
       "isTest": true
+    },
+    {
+      "outcome": "loss",
+      "oppUsername": "TestOpponent",
+      "timeClass": "all",
+      "userRating": 1500,
+      "oppRating": 1495,
+      "ratingDiff": 0,
+      "url": "https://www.chess.com",
+      "endTime": 1794174044,
+      "isTest": true
+    },
+    {
+      "outcome": "loss",
+      "oppUsername": "TestOpponent",
+      "timeClass": "all",
+      "userRating": 1500,
+      "oppRating": 1495,
+      "ratingDiff": 0,
+      "url": "https://www.chess.com",
+      "endTime": 1794174048,
+      "isTest": true
+    },
+    {
+      "outcome": "draw",
+      "oppUsername": "TestOpponent",
+      "timeClass": "all",
+      "userRating": 1500,
+      "oppRating": 1495,
+      "ratingDiff": 0,
+      "url": "https://www.chess.com",
+      "endTime": 1794174051,
+      "isTest": true
+    },
+    {
+      "outcome": "draw",
+      "oppUsername": "TestOpponent",
+      "timeClass": "all",
+      "userRating": 1500,
+      "oppRating": 1495,
+      "ratingDiff": 0,
+      "url": "https://www.chess.com",
+      "endTime": 1794174052,
+      "isTest": true
+    },
+    {
+      "outcome": "loss",
+      "userResult": "resigned",
+      "oppResult": "win",
+      "userRating": 1839,
+      "oppRating": 1943,
+      "oppUsername": "JohnnyCrab",
+      "userColor": "black",
+      "timeClass": "bullet",
+      "timeControl": "60",
+      "rated": false,
+      "url": "https://www.chess.com/game/live/186809372708",
+      "endTime": 1794174101,
+      "ratingDiff": 0
     }
   ],
   "streak": {
-    "type": null,
-    "count": 0
+    "type": "loss",
+    "count": 1
   },
   "settings": {
     "timeClass": "all",
@@ -1550,16 +1610,20 @@
   },
   "lastGame": {
     "outcome": "loss",
-    "oppUsername": "TestOpponent",
-    "timeClass": "all",
-    "userRating": 1500,
-    "oppRating": 1495,
-    "ratingDiff": 0,
-    "url": "https://www.chess.com",
-    "endTime": 1794173022,
-    "isTest": true
+    "userResult": "resigned",
+    "oppResult": "win",
+    "userRating": 1839,
+    "oppRating": 1943,
+    "oppUsername": "JohnnyCrab",
+    "userColor": "black",
+    "timeClass": "bullet",
+    "timeControl": "60",
+    "rated": false,
+    "url": "https://www.chess.com/game/live/186809372708",
+    "endTime": 1794174101,
+    "ratingDiff": 0
   },
-  "lastPolled": 1794173024,
+  "lastPolled": 1794174103,
   "status": "active",
   "statusMessage": "Tracking live: avinashsinghhhh"
 }
