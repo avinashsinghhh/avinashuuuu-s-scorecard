@@ -173,36 +173,25 @@
       if (broadcastChannel) {
         broadcastChannel.postMessage({ type: 'STATE_UPDATE', state });
       }
-      sendWebRTCUpdate(state);
+      publishCloudSync(state);
     } catch (e) {}
   }
 
-  // WebRTC remote sync for Netlify hosting
-  let webrtcPeer = null;
-  let webrtcConn = null;
-
-  function sendWebRTCUpdate(state) {
+  // Cloud push sync (instantly pushes state to OBS on Netlify & remote devices)
+  let lastPublishTime = 0;
+  function publishCloudSync(state) {
     const user = (state.username || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!user || typeof Peer === 'undefined') return;
+    if (!user) return;
+    const topic = 'chess-overlay-' + user;
 
-    if (!webrtcConn || !webrtcConn.open) {
-      if (!webrtcPeer || webrtcPeer.destroyed) {
-        webrtcPeer = new Peer();
-        webrtcPeer.on('open', () => {
-          webrtcConn = webrtcPeer.connect('chess-obs-' + user);
-          webrtcConn.on('open', () => {
-            webrtcConn.send({ type: 'STATE_UPDATE', state });
-          });
-        });
-      } else if (webrtcPeer.open) {
-        webrtcConn = webrtcPeer.connect('chess-obs-' + user);
-        webrtcConn.on('open', () => {
-          webrtcConn.send({ type: 'STATE_UPDATE', state });
-        });
-      }
-    } else {
-      webrtcConn.send({ type: 'STATE_UPDATE', state });
-    }
+    fetch(`https://ntfy.sh/${topic}`, {
+      method: 'POST',
+      headers: {
+        'Title': 'StateUpdate',
+        'Priority': 'urgent'
+      },
+      body: JSON.stringify(state)
+    }).catch(() => {});
   }
 
   function renderHistory(history) {

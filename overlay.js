@@ -1,6 +1,7 @@
 /**
  * Chess Stream Overlay - Live Display Logic
- * 100% Self-Contained & Resilient (Zero External Dependencies)
+ * Real-Time Netlify Cloud Sync + Localhost Auto-Fallback
+ * Zero External Dependencies (Uses Native EventSource & Fetch)
  */
 
 (function () {
@@ -28,7 +29,6 @@
   const lastGameText = document.getElementById('last-game-text');
   const eventToast = document.getElementById('event-toast');
 
-  // Built-in Helpers (Zero external dependency)
   function calcWinRate(w, l, d) {
     const total = w + l + d;
     if (total === 0) return '0%';
@@ -70,6 +70,7 @@
 
   let prevState = { wins: 0, losses: 0, draws: 0 };
   let isFirstLoad = true;
+  let activeEventSource = null;
 
   function applyUrlOverrides(s) {
     const res = { ...s };
@@ -109,6 +110,12 @@
       state.settings = { ...state.settings, ...newState.settings };
     }
 
+    // Connect cloud sync if username was learned
+    const user = state.username || params.get('user') || params.get('username');
+    if (user && !activeEventSource) {
+      initCloudSync(user);
+    }
+
     const settings = applyUrlOverrides(state.settings || {});
 
     // 1. Theme & Layout classes
@@ -122,9 +129,15 @@
     }
 
     // 3. Title & Username
-    if (customTitle) customTitle.textContent = settings.customTitle || 'SESSION RECORD';
+    const displayUser = state.username || params.get('user') || params.get('username') || '';
+    if (customTitle) {
+      if (!displayUser && !params.has('title')) {
+        customTitle.textContent = 'SET ?user=YOUR_NAME IN OBS';
+      } else {
+        customTitle.textContent = settings.customTitle || 'SESSION RECORD';
+      }
+    }
     if (userTag) {
-      const displayUser = state.username || params.get('user') || params.get('username') || '';
       if (settings.showUsername && displayUser) {
         userTag.style.display = 'inline-block';
         userTag.textContent = displayUser;
@@ -233,7 +246,52 @@
     isFirstLoad = false;
   }
 
-  // Endpoints to try (supports relative, localhost:5050, 127.0.0.1:5050)
+  // 1. Cloud Real-Time Push Listener (Syncs Netlify Control Panel -> OBS in Real-Time)
+  function initCloudSync(username) {
+    if (!username) return;
+    const cleanUser = username.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const topic = 'chess-overlay-' + cleanUser;
+
+    // A. Fetch latest state from cloud
+    fetch(`https://ntfy.sh/${topic}/json?poll=1`)
+      .then(res => res.text())
+      .then(text => {
+        if (!text) return;
+        const lines = text.trim().split('\n');
+        for (let i = lines.length - 1; i >= 0; i--) {
+          try {
+            const item = JSON.parse(lines[i]);
+            if (item.event === 'message' && item.message) {
+              const cloudState = JSON.parse(item.message);
+              renderState(cloudState);
+              break;
+            }
+          } catch (e) {}
+        }
+      }).catch(() => {});
+
+    // B. Real-Time Push Events via SSE (EventSource)
+    try {
+      if (activeEventSource) {
+        activeEventSource.close();
+      }
+      activeEventSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
+      activeEventSource.onmessage = (e) => {
+        try {
+          const item = JSON.parse(e.data);
+          if (item.event === 'message' && item.message) {
+            const cloudState = JSON.parse(item.message);
+            renderState(cloudState);
+          }
+        } catch (err) {}
+      };
+      activeEventSource.onerror = () => {
+        // Automatically reconnects
+      };
+    } catch (e) {}
+  }
+
+  // 2. Local Server Poller (when running localhost)
   const apiUrls = [
     '/api/state',
     'http://localhost:5050/api/state',
@@ -249,14 +307,12 @@
           renderState(data);
           return true;
         }
-      } catch (e) {
-        // try next endpoint
-      }
+      } catch (e) {}
     }
     return false;
   }
 
-  // Standalone Direct Polling for Netlify or standalone file
+  // 3. Direct Chess.com Game Polling (Runs in OBS directly)
   async function directChesscomPoll() {
     const user = state.username || params.get('user') || params.get('username');
     if (!user) return;
@@ -337,7 +393,7 @@
     }
   }
 
-  // Cross-window sync via BroadcastChannel
+  // 4. Same-machine / OBS Custom Dock sync via BroadcastChannel
   if (typeof BroadcastChannel !== 'undefined') {
     const bc = new BroadcastChannel('chess_overlay_channel');
     bc.onmessage = (e) => {
@@ -355,7 +411,12 @@
     }
   });
 
-  // Fast 800ms polling cycle
+  // Start cloud sync immediately if user param is present in OBS URL
+  const initialUser = params.get('user') || params.get('username');
+  if (initialUser) {
+    initCloudSync(initialUser);
+  }
+
   updateCycle();
-  setInterval(updateCycle, 800);
+  setInterval(updateCycle, 1200);
 })();

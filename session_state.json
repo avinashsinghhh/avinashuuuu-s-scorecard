@@ -1,7 +1,7 @@
 {
   "username": "avinashsinghhhh",
   "wins": 0,
-  "losses": 3,
+  "losses": 64,
   "draws": 2,
   "sessionStartTime": 1794173024,
   "baselineRatings": {
@@ -1623,7 +1623,7 @@
     "endTime": 1794174101,
     "ratingDiff": 0
   },
-  "lastPolled": 1794174103,
+  "lastPolled": 1794174962,
   "status": "active",
   "statusMessage": "Tracking live: avinashsinghhhh"
 }
